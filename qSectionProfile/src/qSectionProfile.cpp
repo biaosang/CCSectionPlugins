@@ -8,6 +8,7 @@
 #include <ccPolyline.h>
 
 #include <QIcon>
+#include <QMainWindow>
 
 qSectionProfile::qSectionProfile(QObject* parent)
 	: QObject(parent)
