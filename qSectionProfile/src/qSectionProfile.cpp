@@ -9,6 +9,7 @@
 
 #include <QIcon>
 #include <QMainWindow>
+#include <QWidget>
 
 qSectionProfile::qSectionProfile(QObject* parent)
 	: QObject(parent)
@@ -94,6 +95,7 @@ void qSectionProfile::doAction()
 		return;
 	}
 
-	SectionProfileDialog dialog(*polyline, *cloud, m_app->getMainWindow());
+	QWidget* parentWidget = static_cast<QWidget*>(m_app->getMainWindow());
+	SectionProfileDialog dialog(*polyline, *cloud, parentWidget);
 	dialog.exec();
 }
