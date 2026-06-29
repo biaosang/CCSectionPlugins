@@ -1,0 +1,18 @@
+{
+	"type": "Standard",
+	"name": "Section Profile",
+	"icon": ":/CC/plugin/qSectionProfile/images/section_profile.svg",
+	"description": "Extract a section profile from one polyline and one point cloud.",
+	"authors": [
+		{
+			"name": "CloudCompare plugin"
+		}
+	],
+	"maintainers": [
+		{
+			"name": "CloudCompare plugin"
+		}
+	],
+	"references": [],
+	"license": "MIT"
+}

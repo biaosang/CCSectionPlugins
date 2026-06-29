@@ -1,0 +1,88 @@
+name: Build macOS CloudCompare Plugin
+
+on:
+  workflow_dispatch:
+    inputs:
+      cloudcompare_ref:
+        description: "CloudCompare git ref, branch, or tag to build against"
+        required: true
+        default: "master"
+      build_type:
+        description: "CMake build type"
+        required: true
+        default: "Release"
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  macos:
+    name: macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Checkout CloudCompare
+        uses: actions/checkout@v4
+        with:
+          repository: CloudCompare/CloudCompare
+          ref: ${{ github.event.inputs.cloudcompare_ref || 'master' }}
+          path: CloudCompare
+          submodules: recursive
+
+      - name: Install dependencies
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-activate-base: false
+          activate-environment: CloudCompareDev
+          environment-file: CloudCompare/.ci/conda-macos.yml
+          channels: conda-forge
+          conda-remove-defaults: "true"
+
+      - name: Add private plugin
+        shell: bash
+        run: |
+          mkdir -p CloudCompare/plugins/private
+          rsync -a --delete plugin/qSectionProfile/ CloudCompare/plugins/private/qSectionProfile/
+
+      - name: Configure
+        shell: bash -l {0}
+        run: |
+          BUILD_TYPE="${{ github.event.inputs.build_type || 'Release' }}"
+          CONDA_LIB_DIR="$CONDA_PREFIX/."
+          EIGEN_ROOT_DIR="$CONDA_LIB_DIR/include/eigen3"
+
+          cmake \
+            -S CloudCompare \
+            -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_PREFIX_PATH="$CONDA_LIB_DIR" \
+            -DEIGEN_ROOT_DIR="$EIGEN_ROOT_DIR" \
+            -DOPTION_BUILD_CCVIEWER=OFF \
+            -DPLUGIN_STANDARD_QSECTION_PROFILE=ON
+
+      - name: Build plugin
+        run: cmake --build build --target QSECTION_PROFILE_PLUGIN --parallel
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          if [ -d build/ccPlugins ]; then
+            cp -R build/ccPlugins artifacts/
+          fi
+          find build -name '*QSECTION_PROFILE_PLUGIN*' -print > artifacts/build-files.txt
+          find build -name '*qSectionProfile*' -print >> artifacts/build-files.txt
+
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qSectionProfile-macos
+          path: artifacts

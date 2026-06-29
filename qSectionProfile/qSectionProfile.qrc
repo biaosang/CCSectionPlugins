@@ -1,0 +1,6 @@
+<RCC>
+	<qresource prefix="/CC/plugin/qSectionProfile">
+		<file>info.json</file>
+		<file>images/section_profile.svg</file>
+	</qresource>
+</RCC>
